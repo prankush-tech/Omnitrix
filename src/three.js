@@ -78,7 +78,7 @@ export default class threeJS {
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 		this.controls.update();
 		this.controls.enableDamping = true;
-		this.controls.dampingFactor = 0.1;
+		this.controls.dampingFactor = 0.05;
 		this.controls.enablePan = false
 		this.controls.minAzimuthAngle = -Math.PI/4
 		this.controls.maxAzimuthAngle = Math.PI/1.35
