@@ -79,6 +79,11 @@ export default class threeJS {
 		this.controls.update();
 		this.controls.enableDamping = true;
 		this.controls.dampingFactor = 0.1;
+		this.controls.enablePan = false
+		this.controls.minAzimuthAngle = -Math.PI/4
+		this.controls.maxAzimuthAngle = Math.PI/1.35
+		this.controls.minPolarAngle = Math.PI/4
+		this.controls.maxPolarAngle = Math.PI/2
 
 		this.perlinTexture = new THREE.TextureLoader().load('./models/perlin.png');
 		this.perlinTexture.wrapS = THREE.RepeatWrapping;
