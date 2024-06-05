@@ -262,9 +262,11 @@ export default class threeJS {
 			this.BigChill.then(data => this.alienArray.push(data))
 		]);
 
-		this.scene.add(this.alienArray[this.alienIndex])
 		let clickME = document.querySelector('.btnloading');
-		clickME.style.display = 'block';
+		window.setTimeout(()=>{
+			this.scene.add(this.alienArray[this.alienIndex])
+			clickME.style.display = 'block';
+		},1000)
 
 	}
 
@@ -333,16 +335,11 @@ export default class threeJS {
 
 		this.material.uniforms.uTime.value += this.deltaTime;
 
+		console.log(this.scene.children[2]?.children[0].name)
 
 		if (this.scene.children[2]?.children[0].name) {
 
-			//solving cannonBold rotation problem
-			if (this.scene.children[2]?.children[0].name == "Plane_Black_0") {
-				this.scene.children[2].children[0].rotation.z += 0.009;
-			}
-			else if(this.scene.children[2]?.children[0].name) {
-				this.scene.children[2].children[0].rotation.y += 0.009;
-			}
+			this.alienArray[this.alienIndex].rotation.y+=0.008
 		}
 
 
