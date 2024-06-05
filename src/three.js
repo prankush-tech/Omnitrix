@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import GUI from 'lil-gui';
 import alienMaterialvertexShader from '../shaders/alienMaterial/vertex.glsl';
 import alienMaterialfragmentShader from '../shaders/alienMaterial/fragment.glsl';
-import aliens from './alien';
+// import aliens from './alien';
+import Omnitrixaliens from './alien';
 
 import Stats from 'stats.js';
 import { gsap } from 'gsap';
@@ -14,6 +15,8 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
+
+
 export default class threeJS {
 	constructor(options) {
 		this.gsap = gsap.registerPlugin(ScrollTrigger);
@@ -24,27 +27,23 @@ export default class threeJS {
 		this.stats1 = new Stats();
 		this.container.appendChild(this.stats1.dom);
 		this.stats1.showPanel(1);
-
 		this.debugObject = {
 			depthColor: '#a30000',
 			surfaceColor: '#ffe770'
 		};
-
 		this.params = {
 			exposure: 10.5,
 			bloomStrength: 10.5,
 			bloomThreshold: 10.1,
-			bloomRadius: 1
+			bloomRadius: 1.5
 		};
 
 		this.scene = new THREE.Scene();
 		this.width = this.container.offsetWidth;
 		this.height = this.container.offsetHeight;
-
-		this.camera = new THREE.PerspectiveCamera(18, window.innerWidth / window.innerHeight, 0.01, 1000);
-		this.camera.position.set(3, 1.5, 3);
+		this.camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 0.01, 1000);
+		this.camera.position.set(3, 1.2, 3);
 		// this.camera.position.set(7,7,7);
-
 		this.renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			alpha: true
@@ -58,16 +57,16 @@ export default class threeJS {
 
 		this.dracoloader = new DRACOLoader();
 		this.dracoloader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-		// this.renderer.toneMapping = 4;
-		// this.renderer.outputEncoding = THREE.sRGBEncoding
-		// this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+
 
 		this.gltf = new GLTFLoader();
 		this.gltf.setDRACOLoader(this.dracoloader);
 		this.omnitrix = new GLTFLoader();
 		this.omnitrix.setDRACOLoader(this.dracoloader);
 		this.omnitrixDial = null;
-		this.omnitrixRotation =0;
+		this.omnitrixRotation = 0;
+
+
 
 		this.watchLight = new THREE.PointLight('#d5f5d5', 1, 100);
 		this.watchLight.position.y = 0.1;
@@ -80,25 +79,19 @@ export default class threeJS {
 		this.controls.enableDamping = true;
 		this.controls.dampingFactor = 0.05;
 		this.controls.enablePan = false
-		this.controls.minAzimuthAngle = -Math.PI/4
-		this.controls.maxAzimuthAngle = Math.PI/1.35
-		this.controls.minPolarAngle = Math.PI/4
-		this.controls.maxPolarAngle = Math.PI/2
+		this.controls.minAzimuthAngle = -Math.PI / 4
+		this.controls.maxAzimuthAngle = Math.PI / 1.35
+		this.controls.minPolarAngle = Math.PI / 4
+		this.controls.maxPolarAngle = Math.PI / 2
 
 		this.perlinTexture = new THREE.TextureLoader().load('./models/perlin.png');
 		this.perlinTexture.wrapS = THREE.RepeatWrapping;
 		this.perlinTexture.wrapT = THREE.RepeatWrapping;
 
-		//GUi
-		// this.gui = new GUI({ width: '320px' });
-
-		// this.container.appendChild(this.gui.domElement);
 		this.materialParameters = {
 			color: '#70c1ff'
 		};
 
-		this.alienIndex = 0;
-		this.alien = aliens[this.alienIndex];
 
 		this.material = new THREE.ShaderMaterial({
 			uniforms: {
@@ -113,9 +106,25 @@ export default class threeJS {
 			blending: THREE.AdditiveBlending
 		});
 
+
+
+		//aliens
+		this.initAlien = true;
+		this.alienArray = [];
+		this.alienIndex = 0;
+		this.rath = null;
+		this.cannonboltNew = null;
+		this.BrainStorm = null;
+		this.Amphibian = null;
+		this.GreyMatter = null;
+		this.DiamondHead = null;
+		this.BigChill = null;
+
+
 		this.settings();
 		this.initiPost();
-		this.addAliens();
+		this.loadAliens();
+
 		this.render();
 		this.resize();
 		this.setupResize();
@@ -126,7 +135,7 @@ export default class threeJS {
 			'./models/omnitrix2.glb',
 			(watch) => {
 				watch.scene.scale.set(0.2, 0.2, 0.2);
-				this.omnitrixDial=watch.scene.children[0]
+				this.omnitrixDial = watch.scene.children[0]
 				watch.scene.position.y = -0.7;
 				watch.scene.rotation.y = -Math.PI / 4;
 				this.scene.add(watch.scene);
@@ -141,92 +150,132 @@ export default class threeJS {
 
 		this.button = document.getElementById('omniButton');
 		this.button.addEventListener('click', () => {
+			if (this.initAlien) this.deleteInitAlien()
+
 			this.changeAliens();
-			console.log('changed');
-			this.animateSpin();
+
 		});
 	}
-	changeAliens() {
+
+	deleteInitAlien() {
+		this.initAlien = false
+		this.scene.remove(this.scene.children[2])
+	}
+	async changeAliens() {
 		// omnitrixDial
 		this.rotateDialTimeline = new gsap.timeline();
 		this.rotateDialTimeline.to(
 			this.omnitrixDial.rotation,
 			{
-				z: this.omnitrixRotation+1,
+				z: this.omnitrixRotation + 1,
 				duration: 0.3
 			},
 			'same'
-			);
-			
-		this.omnitrixRotation +=1;
+		);
+		this.omnitrixRotation += 1;
 
-		this.alienIndex = (this.alienIndex + 1) % aliens.length;
-		this.alien = aliens[this.alienIndex];
-	}
 
-	async animateSpin() {
+
+
 		this.timelineToRemove = new gsap.timeline();
-
 		await this.timelineToRemove.to(
-			this.alienXmodel.scale,
+			this.alienArray[this.alienIndex].scale,
 			{
 				x: 0,
 				y: 0,
 				z: 0,
 				duration: 0.3
 			},
-			'same'
-		);
-		this.removeAlien();
+
+		).then(() => {
+
+			this.scene.remove(this.alienArray[this.alienIndex])
+			this.alienIndex = (this.alienIndex + 1) % (this.alienArray.length)
+			this.scene.add(this.alienArray[this.alienIndex])
+		}).then(() => {
+
+			this.timelineToRemove.to(
+				this.alienArray[this.alienIndex].scale,
+				{
+					x: 0.15,
+					y: 0.15,
+					z: 0.15,
+					duration: 0.3
+				},
+			)
+		})
+
+
 	}
 
-	removeAlien() {
-		this.scene.remove(this.alienXmodel);
-		this.addAliens();
+
+
+
+	addAliens(alienNumber) {
+		return new Promise((resolve, reject) => {
+			this.gltf.load(
+				`${Omnitrixaliens[alienNumber]}`,
+				(alienX) => {
+
+					alienX.scene.scale.set(0, 0, 0);
+
+					if (this.initAlien) {
+						alienX.scene.scale.set(0.15, 0.15, 0.15);
+						this.initAlien = false
+					}
+
+
+					alienX.scene.position.set(0, -0.2, 0);
+					alienX.scene.rotation.y = Math.PI / 8;
+
+					alienX.scene.children.forEach((parts) => {
+						parts.material = this.material;
+					});
+					this.alienXmodel = alienX.scene;
+
+					resolve(alienX.scene); // Resolve the promise with alienX.scene
+				},
+				undefined,
+				(err) => {
+					console.log(err);
+					reject(err); // Reject the promise if there's an error
+				}
+			);
+		});
+	}
+	async loadAliens() {
+		this.rath = this.addAliens(0);
+		this.cannonboltNew = this.addAliens(1);
+		this.BrainStorm = this.addAliens(2);
+		this.Amphibian = this.addAliens(3);
+		this.GreyMatter = this.addAliens(4);
+		this.DiamondHead = this.addAliens(5);
+		this.BigChill = this.addAliens(6);
+
+		await Promise.all([
+			this.rath.then(data => this.alienArray.push(data)),
+			this.cannonboltNew.then(data => this.alienArray.push(data)),
+			this.BrainStorm.then(data => this.alienArray.push(data)),
+			this.Amphibian.then(data => this.alienArray.push(data)),
+			this.GreyMatter.then(data => this.alienArray.push(data)),
+			this.DiamondHead.then(data => this.alienArray.push(data)),
+			this.BigChill.then(data => this.alienArray.push(data))
+		]);
+
+		this.scene.add(this.alienArray[this.alienIndex])
+		let clickME = document.querySelector('.btnloading');
+		clickME.style.display = 'block';
+
 	}
 
-	addAliens() {
-		this.gltf.load(
-			`./models/${this.alien}`,
-			(alienX) => {
-				this.alienXmodel = alienX.scene;
-				this.scene.add(alienX.scene);
-				alienX.scene.scale.set(0, 0, 0);
-				alienX.scene.position.set(0, -0.2, 0);
-				alienX.scene.rotation.y = Math.PI/8
-
-				alienX.scene.children.forEach((parts) => {
-					parts.material = this.material;
-				});
-				this.scaleAliens();
-			},
-			undefined,
-			(err) => {
-				console.log(err);
-			}
-		);
-	}
-	scaleAliens() {
-		this.timelineToRemove = new gsap.timeline();
-		this.timelineToRemove.to(
-			this.alienXmodel.scale,
-			{
-				x: 0.15,
-				y: 0.15,
-				z: 0.15,
-				duration: 0.25
-			},
-			'same'
-		);
-	}
 
 	settings() {
 		let that = this;
 		this.settings = {
-			exposure: 5,
+			exposure: 0,
 			bloomThreshold: 0.1,
-			bloomStrength: 0.5,
-			bloomRadius: 0.1
+			bloomStrength: 1.2,
+			bloomRadius: 1.3
 		};
 	}
 
@@ -273,6 +322,7 @@ export default class threeJS {
 		this.previousTime = this.elapsedTime;
 
 		requestAnimationFrame(this.render.bind(this));
+
 		this.renderer.render(this.scene, this.camera);
 		this.renderer.clearDepth();
 
@@ -283,9 +333,21 @@ export default class threeJS {
 
 		this.material.uniforms.uTime.value += this.deltaTime;
 
-		if (this.alienXmodel) this.alienXmodel.rotation.y += 0.002;
 
-		// console.log(this.camera.position)
+		if (this.scene.children[2]?.children[0].name) {
+
+			//solving cannonBold rotation problem
+			if (this.scene.children[2]?.children[0].name == "Plane_Black_0") {
+				this.scene.children[2].children[0].rotation.z += 0.009;
+			}
+			else {
+				this.scene.children[2].children[0].rotation.y += 0.009;
+			}
+		}
+
+
+
+
 		//for Bloom Enable this
 		this.composer.render(this.scene, this.camera);
 	}

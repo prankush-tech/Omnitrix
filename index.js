@@ -21,7 +21,7 @@ window.onload = function()
 	var preloader = document.querySelector('.preloader');
 	let clickME = document.querySelector('.btnloading');
 	
-	clickME.style.display = 'block';
+	// clickME.style.display = 'block';
 	clickME.addEventListener('click', () => {
 		
 		
