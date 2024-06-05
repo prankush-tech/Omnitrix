@@ -263,10 +263,9 @@ export default class threeJS {
 		]);
 
 		let clickME = document.querySelector('.btnloading');
-		window.setTimeout(()=>{
-			this.scene.add(this.alienArray[this.alienIndex])
-			clickME.style.display = 'block';
-		},1000)
+		this.scene.add(this.alienArray[this.alienIndex])
+		clickME.style.display = 'block';
+
 
 	}
 
