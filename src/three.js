@@ -340,7 +340,7 @@ export default class threeJS {
 			if (this.scene.children[2]?.children[0].name == "Plane_Black_0") {
 				this.scene.children[2].children[0].rotation.z += 0.009;
 			}
-			else {
+			else if(this.scene.children[2]?.children[0].name) {
 				this.scene.children[2].children[0].rotation.y += 0.009;
 			}
 		}
